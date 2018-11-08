@@ -15,13 +15,14 @@ desirable to track task exception states for each worker.
 ## Identifiers
 Resources in this system are identified by `$DC:$HOSTNAME`.  Basically, I don't
 know if it's safe to assume that hostnames are unique across all of
-releng-hardware so I've included the datacenter in this.  The `/machines`
-endpoint splits the datacenter id from the hostname, so if desired, can be
-ignored
+releng-hardware so I've included the datacenter in the identifier.
+
+The `/machines` endpoint splits the datacenter id from the hostname, so if
+desired, can be ignored
 
 ## Installation
-A setup.py/requirements.txt file is not provided because this is a proof of
-concept.  Writing one is recommended.
+A `setup.py` file is not provided because this is a proof of concept.  Writing
+one is recommended.
 
 The dependencies used are installed as follows:
 
@@ -45,9 +46,13 @@ $ python webserver.py &
 $ python listen_to_pulse.py &
 ```
 
-A script `preload_redis.py` exists which takes data in the format, though a 404
-response from the `/machines/<id>` should be enough to know that the machine
-has not been heard from since the database was last initialized.
+A script `preload_redis.py` exists which takes data in the format returned by
+the `/machines` endpoint and inserts it into the redis storage.  This shouldn't
+be needed though, since a 404 response from the `/machines/<id>` should be
+enough to know that the machine has not been heard from since the database was
+last initialized.
+
+Here's an example index in the list
 
 ```json
 [
@@ -55,12 +60,13 @@ has not been heard from since the database was last initialized.
     "machine": "t-linux64-ms-100",
     "datacenter": "mdc1",
     "lastseen": "2018-11-08T08:47:50.939514"
-  },
+  }
 ]
 ```
 
-on standard input and inserts into the database.  The production `REDIS_URL`
-must be set correctly, which is accessible from herok with
+This document is read from standard input and inserts into redis.  The
+production `REDIS_URL` must be set correctly, which is accessible from heroku
+using the Heroku CLI tool as follows:
 
 ```bash
 export $(heroku config:get -s REDIS_URL --app releng-hardware)
