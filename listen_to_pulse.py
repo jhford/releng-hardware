@@ -43,6 +43,8 @@ class TaskMessagesConsumer(GenericConsumer):
 
         self.r.hset('machines', workerGroup + ':' + workerId, lastseen)
 
+        msg.ack()
+
 
 def main():
     c = TaskMessagesConsumer(user=amqp_user, password=amqp_pass);
