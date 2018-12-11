@@ -21,6 +21,7 @@ class TaskMessagesConsumer(GenericConsumer):
         ]
         super(TaskMessagesConsumer, self).__init__(
             PulseConfiguration(**kwargs),
+            applabel='releng-hardware',
             exchange=[x['exchange'] for x in exchangeInfo],
             topic=[x['routingKeyPattern'] for x in exchangeInfo],
             callback=lambda body, msg: self.handle_message(body, msg),
@@ -35,7 +36,7 @@ class TaskMessagesConsumer(GenericConsumer):
             print('DEBUG: This message is missing workerGroup or workerId')
             print(json.dumps(body, indent=2))
             return
-        
+
         print('blipity bloop %s:%s' % (workerGroup, workerId))
 
         lastseen = datetime.datetime.utcnow().isoformat()
