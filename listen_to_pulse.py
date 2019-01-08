@@ -4,8 +4,10 @@ import redis
 import datetime
 
 from mozillapulse.consumers import GenericConsumer, PulseConfiguration
+
 amqp_user = os.environ.get('AMQP_USER', None)
 amqp_pass = os.environ.get('AMQP_PASS', None)
+
 
 class TaskMessagesConsumer(GenericConsumer):
 
@@ -26,7 +28,6 @@ class TaskMessagesConsumer(GenericConsumer):
             topic=[x['routingKeyPattern'] for x in exchangeInfo],
             callback=lambda body, msg: self.handle_message(body, msg),
             **kwargs)
-
 
     def handle_message(self, body, msg):
         workerGroup = body.get('workerGroup')
@@ -49,6 +50,7 @@ class TaskMessagesConsumer(GenericConsumer):
 def main():
     c = TaskMessagesConsumer(user=amqp_user, password=amqp_pass);
     c.listen()
+
 
 if __name__ == '__main__':
     main()
