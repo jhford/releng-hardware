@@ -13,7 +13,7 @@ class TaskMessagesConsumer(GenericConsumer):
 
     def __init__(self, **kwargs):
         self.r = r = redis.from_url(os.environ.get("REDIS_URL"))
-        self.queueEvents = queueEvents = taskcluster.QueueEvents();
+        self.queueEvents = queueEvents = taskcluster.QueueEvents()
         self.exchangeInfo = exchangeInfo = [
             queueEvents.taskRunning(provisionerId='releng-hardware'),
             queueEvents.taskCompleted(provisionerId='releng-hardware'),
@@ -48,7 +48,7 @@ class TaskMessagesConsumer(GenericConsumer):
 
 
 def main():
-    c = TaskMessagesConsumer(user=amqp_user, password=amqp_pass);
+    c = TaskMessagesConsumer(user=amqp_user, password=amqp_pass)
     c.listen()
 
 
