@@ -12,18 +12,30 @@ app = Flask(__name__)
 def machines():
     result = r.hgetall('machines')
     values = list()
-    for entry, lastseen, taskstatus in result.iteritems():
+    for entry, lastseen in result.iteritems():
         datacenter, _, machine = entry.partition(':')
-        values.append({'datacenter': datacenter, 'machine': machine, 'lastseen': lastseen, 'taskstatus': taskstatus})
+        info = {
+                'datacenter': datacenter,
+                'machine': machine,
+                'lastseen': lastseen,
+        }
+
+        info['machines-last-status'] = r.hget('machines-last-status', entry)
+        info['machines-last-taskid'] = r.hget('machines-last-taskid', entry)
+        values.append(info)
     return json.dumps(values, indent=2), 200, {'content-type': 'application/json'}
 
 
 @app.route('/machines/<machine>', methods=['GET'])
 def machine_by_id(machine):
-    lastseen = r.hget('machines', machine)
-    if not lastseen:
+    info = {
+        'lastseen': r.hget('machines', machine),
+        'laststatus': r.hget('machines-last-status', machine),
+        'lasttaskid': r.hget('machines-last-taskid', machine),
+    }
+    if not info['lastseen']:
         return 'unknown machine', 404, {}
-    return json.dumps(lastseen), 200, {'content-type': 'application/json'}
+    return json.dumps(info), 200, {'content-type': 'application/json'}
 
 
 if __name__ == '__main__':

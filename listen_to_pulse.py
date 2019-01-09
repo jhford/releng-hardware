@@ -33,28 +33,25 @@ class TaskMessagesConsumer(GenericConsumer):
         workerGroup = body.get('workerGroup')
         workerId = body.get('workerId')
 
+        if 'status' in body:
+            taskId = body['status']['taskId']
+            state = body['status']['runs'][body['runId']].get('state', 'missing-state')
+            reasonResolved = body['status']['runs'][body['runId']].get('reasonResolved', 'unresolved')
+
         if not workerGroup or not workerId:
             print('DEBUG: This message is missing workerGroup or workerId')
             print(json.dumps(body, indent=2))  # TODO: Ask John about it.
             return
 
-        print('blipity bloop {}:{}'.format(workerGroup, workerId))
+        print('blipity bloop {}:{}, {}, {}, {}'.format(workerGroup, workerId, taskId, state, reasonResolved))
 
         lastseen = datetime.datetime.utcnow().isoformat()
-        taskStatus = ""
 
-        if self.exchangeInfo == self.queueEvents.taskRunning(provisionerId='releng-hardware'):
-            taskStatus = "Running"
-        elif self.exchangeInfo == self.queueEvents.taskCompleted(provisionerId='releng-hardware'):
-            taskStatus = "Completed"
-        elif self.exchangeInfo == self.queueEvents.taskFailed(provisionerId='releng-hardware'):
-            taskStatus = "Failed!"
-        elif self.exchangeInfo == self.queueEvents.taskException(provisionerId='releng-hardware'):
-            taskStatus = "Exception!"
-        else:
-            print("Unknown task type!")
-
-        self.r.hset('machines', workerGroup + ':' + workerId, lastseen, taskStatus)  # TODO: Ask John about it.
+        pipeline = self.r.pipeline()
+        pipeline.hset('machines', workerGroup + ':' + workerId, lastseen)
+        pipeline.hset('machines-last-status', workerGroup + ':' + workerId, state + '_' + reasonResolved)
+        pipeline.hset('machines-last-taskid', workerGroup + ':' + workerId, taskId)
+        pipeline.execute()
 
         msg.ack()
 
