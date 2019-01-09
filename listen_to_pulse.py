@@ -12,7 +12,7 @@ amqp_pass = os.environ.get('AMQP_PASS', None)
 class TaskMessagesConsumer(GenericConsumer):
 
     def __init__(self, **kwargs):
-        self.r = r = redis.from_url(os.environ.get("REDIS_URL"))
+        self.r = r = redis.from_url(os.environ.get("REDIS_URL"))  # TODO: Ask John about it.
         self.queueEvents = queueEvents = taskcluster.QueueEvents()
         self.exchangeInfo = exchangeInfo = [
             queueEvents.taskRunning(provisionerId='releng-hardware'),
@@ -35,14 +35,26 @@ class TaskMessagesConsumer(GenericConsumer):
 
         if not workerGroup or not workerId:
             print('DEBUG: This message is missing workerGroup or workerId')
-            print(json.dumps(body, indent=2))
+            print(json.dumps(body, indent=2))  # TODO: Ask John about it.
             return
 
-        print('blipity bloop %s:%s' % (workerGroup, workerId))
+        print('blipity bloop {}:{}'.format(workerGroup, workerId))
 
         lastseen = datetime.datetime.utcnow().isoformat()
+        taskStatus = ""
 
-        self.r.hset('machines', workerGroup + ':' + workerId, lastseen)
+        if self.exchangeInfo == self.queueEvents.taskRunning(provisionerId='releng-hardware'):
+            taskStatus = "Running"
+        elif self.exchangeInfo == self.queueEvents.taskCompleted(provisionerId='releng-hardware'):
+            taskStatus = "Completed"
+        elif self.exchangeInfo == self.queueEvents.taskFailed(provisionerId='releng-hardware'):
+            taskStatus = "Failed!"
+        elif self.exchangeInfo == self.queueEvents.taskException(provisionerId='releng-hardware'):
+            taskStatus = "Exception!"
+        else:
+            print("Unknown task type!")
+
+        self.r.hset('machines', workerGroup + ':' + workerId, lastseen, taskStatus)  # TODO: Ask John about it.
 
         msg.ack()
 

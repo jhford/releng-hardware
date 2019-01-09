@@ -12,9 +12,9 @@ app = Flask(__name__)
 def machines():
     result = r.hgetall('machines')
     values = list()
-    for entry, lastseen in result.iteritems():
+    for entry, lastseen, taskstatus in result.iteritems():
         datacenter, _, machine = entry.partition(':')
-        values.append({'datacenter': datacenter, 'machine': machine, 'lastseen': lastseen})
+        values.append({'datacenter': datacenter, 'machine': machine, 'lastseen': lastseen, 'taskstatus': taskstatus})
     return json.dumps(values, indent=2), 200, {'content-type': 'application/json'}
 
 
