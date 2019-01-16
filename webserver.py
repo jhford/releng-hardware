@@ -1,4 +1,4 @@
-from flask import Flask, redirect
+from flask import Flask
 import redis
 import json
 import os
@@ -6,11 +6,6 @@ import os
 r = redis.from_url(os.environ.get("REDIS_URL"))
 
 app = Flask(__name__)
-
-
-@app.route("/", method=["GET"])
-def index():
-    return redirect("/machines", code=302)
 
 
 @app.route('/machines', methods=['GET'])
