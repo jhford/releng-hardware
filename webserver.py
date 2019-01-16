@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, redirect
 import redis
 import json
 import os
@@ -8,20 +8,21 @@ r = redis.from_url(os.environ.get("REDIS_URL"))
 app = Flask(__name__)
 
 
+@app.route("/", method=["GET"])
+def index():
+    return redirect("/machines", code=302)
+
+
 @app.route('/machines', methods=['GET'])
 def machines():
     result = r.hgetall('machines')
     values = list()
     for entry, lastseen in result.iteritems():
         datacenter, _, machine = entry.partition(':')
-        info = {
-                'datacenter': datacenter,
-                'machine': machine,
-                'lastseen': lastseen,
-        }
+        info = {'datacenter': datacenter, 'machine': machine, 'lastseen': lastseen,
+                'machines-last-status': r.hget('machines-last-status', entry),
+                'machines-last-taskid': r.hget('machines-last-taskid', entry)}
 
-        info['machines-last-status'] = r.hget('machines-last-status', entry)
-        info['machines-last-taskid'] = r.hget('machines-last-taskid', entry)
         values.append(info)
     return json.dumps(values, indent=2), 200, {'content-type': 'application/json'}
 
